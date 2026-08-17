@@ -6,3 +6,4 @@ output/*
 !data/*/.gitkeep
 .venv
 __pycache__/
+.ipynb_checkpoints/
