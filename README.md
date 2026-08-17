@@ -29,7 +29,7 @@ No 3.14? `make setup PYTHON=python3.12`
 | `src/gold.py` | **Gold.** `fct_sales` (grain: one row per sale) + `dim_products` + `dim_customers`. Joins use `validate="many_to_one"` |
 | `src/tests.py` | `unique`, `not_null`, `accepted_values`, `relationships` - dbt schema tests in pandas, run after each layer |
 | `src/main.py` | Chains the layers |
-| `notebooks/01_explore.ipynb` | Exploration that surfaced the issues below |
+| `notebooks/explore.ipynb` | Exploration that surfaced the issues below |
 | `notebooks/analysis.ipynb` | The four business questions, with reasoning per question |
 | `data/bronze/quarantine.parquet` | Every anomaly with its original payload, for raising upstream |
 
