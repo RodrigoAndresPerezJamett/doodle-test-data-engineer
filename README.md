@@ -10,3 +10,8 @@ make clean    # removes generated layers (data/raw is untouched)
 ```
 
 Override the interpreter if needed: `make setup PYTHON=python3.12`
+
+To run the full pipeline from scratch:
+```bash
+make clean && rm -rf .venv && make setup && make run
+```

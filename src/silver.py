@@ -141,9 +141,12 @@ def clean_products(bronze_dir):
 
     # Return without duplicates, keeping the first occurrence of each product_id.
     # We should have an alert here (assuming product ids are unique).
+    df = df.drop_duplicates(subset="product_id", keep="first")
+
     final_count = len(df)
     log.info("silver.products: From %d to %d rows after cleaning", initial_count, final_count)
-    return df.drop_duplicates(subset="product_id", keep="first")
+    
+    return df
 
 
 CLEANERS = {"sales": clean_sales, "customers": clean_customers, "products": clean_products}

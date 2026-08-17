@@ -26,7 +26,7 @@ def build_dim_products(silver_dir):
         ["product_id", "product_name", "category", "price", "supplier"]
     ]
 
-    log.info("dim.products processed.\n")
+    log.info("dim_products: %d rows processed.", len(dim_products))
     
     return dim_products
 
@@ -38,7 +38,7 @@ def build_dim_customers(silver_dir):
         ["customer_id", "name", "region", "signup_date", "email", "loyalty_points"]
     ]
 
-    log.info("dim.customers processed.\n")
+    log.info("dim_customers: %d rows processed.", len(dim_customers))
 
     return dim_customers
 
