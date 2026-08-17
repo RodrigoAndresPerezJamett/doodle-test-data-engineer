@@ -1,24 +1,32 @@
-from pathlib import Path
-
+import logging
+from src.config import BRONZE_DIR, RAW_DIR, SOURCES, THRESHOLDS
 from src.ingest import build_bronze
 
-ROOT = Path(__file__).resolve().parent.parent
-RAW = ROOT / "data" / "raw"
-OUT = ROOT / "output"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(name)s %(levelname)s %(message)s",
+)
+
+log = logging.getLogger(__name__)
 
 
 def main():
-    OUT.mkdir(exist_ok=True)
 
-    bronze, anomalies = build_bronze(RAW)
+    ###### STEP 1 ######
+    # Build bronze layer from raw sources
+    stats = build_bronze(RAW_DIR, BRONZE_DIR, SOURCES)
 
-    for name, df in bronze.items():
-        print(f"{name}: {len(df)} rows")
+    # Alert if anomaly rate exceeds threshold
+    limit = THRESHOLDS["anomaly_rate"]
+    breached = stats[stats["anomaly_rate"] > limit]
+    if not breached.empty:
+        raise ValueError(
+            f"Anomaly rate above {limit:.0%}"
+        ) # We stop the pipeline and should also send an alert to Slack or email instead of raising an exception.
 
-    if not anomalies.empty:
-        print(anomalies.groupby("issue").size().to_string())
-        anomalies.groupby("issue").head(3).to_csv(OUT / "anomaly_samples.csv", index=False)
 
+    ###### STEP 2 ######
+    # Build silver layer from bronze sources
 
 if __name__ == "__main__":
     main()

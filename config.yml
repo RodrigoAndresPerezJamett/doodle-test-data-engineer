@@ -1,0 +1,13 @@
+thresholds:
+  anomaly_rate: 0.10
+
+sources:
+  sales:
+    file: sales_data.json
+    fields: [SaleID, ProductID, CustomerID, Quantity, TotalAmount, SaleDate]
+  customers:
+    file: customers.json
+    fields: [CustomerID, Name, Region, SignUpDate, Email, LoyaltyPoints]
+  products:
+    file: products.csv
+    fields: [ProductID, ProductName, Category, Price, Supplier]
