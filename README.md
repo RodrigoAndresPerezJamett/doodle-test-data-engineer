@@ -16,6 +16,11 @@ make clean    # removes generated layers (data/raw is untouched)
 
 No 3.14? `make setup PYTHON=python3.12`
 
+**Full run command**
+```bash
+make clean && rm -rf .venv && make setup && make run
+```
+
 ## Project structure
 
 | Path | What it does |
