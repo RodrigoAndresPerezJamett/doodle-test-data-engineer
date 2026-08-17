@@ -7,28 +7,38 @@ log = logging.getLogger(__name__)
 ANOMALY_COLUMNS = ["batch_id", "row_num", "source", "issue", "detail", "payload"]
 
 
+MAX_UNWRAP_DEPTH = 5
+
 def _unwrap(item):
     """Undo transport-level malformations. Returns (obj, issue, detail)."""
-    if isinstance(item, str):
-        try:
-            return json.loads(item), "double_serialised", None
-        except json.JSONDecodeError:
-            return None, "invalid_json", None
+    issues, keys = [], []
 
-    if isinstance(item, dict):
-        keys = []
-        while isinstance(item, dict) and len(item) == 1:
+    for _ in range(MAX_UNWRAP_DEPTH):
+        if isinstance(item, str):
+            try:
+                item = json.loads(item)
+            except json.JSONDecodeError:
+                return None, "invalid_json", None
+            issues.append("double_serialised")
+
+        elif isinstance(item, dict) and len(item) == 1:
             key, value = next(iter(item.items()))
-            if not isinstance(value, dict):
+            if not isinstance(value, (dict, str)):
                 break
             keys.append(key)
+            issues.append("wrapped_in_key")
             item = value
 
-        if keys:
-            return item, "wrapped_in_key", ".".join(keys)
+        else:
+            break
+
+    if not isinstance(item, dict):
+        return None, f"unexpected_type:{type(item).__name__}", None
+
+    if not issues:
         return item, None, None
 
-    return None, f"unexpected_type:{type(item).__name__}", None
+    return item, "+".join(dict.fromkeys(issues)), ".".join(keys) or None
 
 
 def load_json(path, source, fields, batch_id):
@@ -84,6 +94,7 @@ LOADERS = {".json": load_json, ".csv": load_csv}
 """Land every configured source to bronze_dir. Returns run stats."""
 def build_bronze(raw_dir, bronze_dir, sources):
 
+    # Create the bronze directory if it doesn't exist
     bronze_dir.mkdir(parents=True, exist_ok=True)
     batch_id = pd.Timestamp.now(tz="UTC").strftime("%Y%m%dT%H%M%SZ")
     anomalies, stats = [], []
@@ -107,7 +118,7 @@ def build_bronze(raw_dir, bronze_dir, sources):
         log.info("bronze.%s: %d rows, %d anomalies", name, len(df), len(anom))
 
     pd.concat(anomalies, ignore_index=True).to_parquet(
-        bronze_dir / "_anomalies.parquet", index=False
+        bronze_dir / "quarantine.parquet", index=False
     )
 
     return pd.DataFrame(stats)
