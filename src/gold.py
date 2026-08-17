@@ -11,25 +11,36 @@ def _read_silver(silver_dir, name):
         raise FileNotFoundError(f"missing silver input: {path}")
 
     df = pd.read_parquet(path)
+
+    if df.empty:
+        # If silver table is empty, we should raise an error via slack or something.
+        raise ValueError(f"silver.{name} is empty")
+    
     return df.loc[:, ~df.columns.str.startswith("_")]
 
 
 """Grain: one row per product."""
 def build_dim_products(silver_dir):
 
-    log.info("dim.products: No transformations applied, it's just a read from silver.products\n")
-    return _read_silver(silver_dir, "products")[
+    dim_products = _read_silver(silver_dir, "products")[
         ["product_id", "product_name", "category", "price", "supplier"]
     ]
+
+    log.info("dim.products processed.\n")
+    
+    return dim_products
 
 
 """Grain: one row per customer."""
 def build_dim_customers(silver_dir):
 
-    log.info("dim.customers: No transformations applied, it's just a read from silver.customers\n")
-    return _read_silver(silver_dir, "customers")[
+    dim_customers = _read_silver(silver_dir, "customers")[
         ["customer_id", "name", "region", "signup_date", "email", "loyalty_points"]
     ]
+
+    log.info("dim.customers processed.\n")
+
+    return dim_customers
 
 
 """
