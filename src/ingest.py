@@ -62,7 +62,7 @@ def load_json(path, source, fields, batch_id):
             })
 
         rows.append({
-            **{c: str(obj[c]) if obj and c in obj else None for c in fields}, # Fill missing fields with None for each key in case the object is missing that key
+            **{c: str(obj[c]) if obj and obj.get(c) is not None else None for c in fields}, # Fill missing fields with None for each key in case the object is missing that key
             "_batch_id": batch_id,
             "_row_num": i,
             "_source_file": path.name,
@@ -74,7 +74,8 @@ def load_json(path, source, fields, batch_id):
 
 
 def load_csv(path, source, fields, batch_id):
-    df = pd.read_csv(path, dtype=str, encoding="utf-8-sig")
+    df = pd.read_csv(path, dtype=str, encoding="utf-8-sig",
+                     keep_default_na=False, na_values=[""])
     df.columns = df.columns.str.strip()
 
     if fields:
@@ -91,8 +92,8 @@ def load_csv(path, source, fields, batch_id):
 
 LOADERS = {".json": load_json, ".csv": load_csv}
 
-"""Land every configured source to bronze_dir. Returns run stats."""
 def build_bronze(raw_dir, bronze_dir, sources):
+    """Land every configured source to bronze_dir. Returns run stats."""
 
     # Create the bronze directory if it doesn't exist
     bronze_dir.mkdir(parents=True, exist_ok=True)
