@@ -81,6 +81,7 @@ def _null_sentinels(df, table):
 
 def clean_sales(bronze_dir):
     df = _read_bronze(bronze_dir, "sales")
+    initial_count = len(df)
 
     for col, kind in [("sale_id", "int"), ("product_id", "int"), ("customer_id", "int"),
                       ("quantity", "int"), ("total_amount", "float"), ("sale_date", "date")]:
@@ -95,11 +96,14 @@ def clean_sales(bronze_dir):
     df["has_customer"] = df["customer_id"].notna()
     df["amount_is_valid"] = df["total_amount"] > 0
 
+    final_count = len(df)
+    log.info("silver.sales: From %d to %d rows after cleaning", initial_count, final_count)
     return df
 
 
 def clean_customers(bronze_dir):
     df = _read_bronze(bronze_dir, "customers")
+    initial_count = len(df)
 
     for col, kind in [("customer_id", "int"), ("loyalty_points", "int"),
                       ("signup_date", "date")]:
@@ -109,11 +113,14 @@ def clean_customers(bronze_dir):
     df["email"] = df["email"].str.strip().str.lower()
     df["region"] = df["region"].str.strip().str.title()
 
+    final_count = len(df)
+    log.info("silver.customers: From %d to %d rows after cleaning", initial_count, final_count)
     return df.drop_duplicates(subset="customer_id", keep="first")
 
 
 def clean_products(bronze_dir):
     df = _read_bronze(bronze_dir, "products")
+    initial_count = len(df)
 
     _cast(df, "products", "product_id", "int")
     _cast(df, "products", "price", "float")
@@ -130,10 +137,12 @@ def clean_products(bronze_dir):
     # Log how many duplicate product_id rows were dropped.
     dups = df["product_id"].duplicated().sum()
     if dups:
-        log.info("silver.products: dropped %d duplicate product_id rows", dups)
+        log.warning("silver.products: dropped %d duplicate product_id rows", dups)
 
     # Return without duplicates, keeping the first occurrence of each product_id.
     # We should have an alert here (assuming product ids are unique).
+    final_count = len(df)
+    log.info("silver.products: From %d to %d rows after cleaning", initial_count, final_count)
     return df.drop_duplicates(subset="product_id", keep="first")
 
 
@@ -160,6 +169,5 @@ def build_silver(bronze_dir, silver_dir):
 
         df.to_parquet(silver_dir / f"{name}.parquet", index=False)
         stats.append({"table": name, "rows": len(df)})
-        log.info("Table silver.%s finished with %d rows", name, len(df))
 
     return pd.DataFrame(stats)

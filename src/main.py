@@ -1,7 +1,8 @@
 import logging
-from src.config import BRONZE_DIR, SILVER_DIR, RAW_DIR, SOURCES, THRESHOLDS
+from src.config import BRONZE_DIR, SILVER_DIR, GOLD_DIR, RAW_DIR, SOURCES, THRESHOLDS
 from src.ingest import build_bronze
 from src.silver import build_silver
+from src.gold import build_gold
 
 logging.basicConfig(
     level=logging.INFO,
@@ -32,6 +33,9 @@ def main():
     log.info("====== Starting silver layer step ======")
     silver_stats = build_silver(BRONZE_DIR, SILVER_DIR)
 
+    print()
+    log.info("====== Starting gold layer step ======")
+    build_gold(SILVER_DIR, GOLD_DIR)
 
 if __name__ == "__main__":
     main()
