@@ -13,7 +13,7 @@ make lab      # opens Jupyter
 make clean    # removes generated layers (data/raw is untouched)
 ```
 
-No 3.14? `make setup PYTHON=python3.12`
+**Requires Python 3.12+. To use a different interpreter: `make setup PYTHON=python3.13`**
 
 **Full run command**
 ```bash
