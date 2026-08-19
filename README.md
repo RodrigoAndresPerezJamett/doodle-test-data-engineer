@@ -132,5 +132,5 @@ Caveats a stakeholder should know:
 - Regional figures exclude 706 of 2,983 sales (24%) with no region. Sales with no product reference are 2.6% of revenue: too small to shift a conclusion, reported anyway.
 
 ## In production
-
-Layers would be orchestrated (Airflow for example) with freshness checks on bronze, each source on its own schedule. Bronze append-only, partitioned by `_batch_id`. `fct_sales` stays at sale grain because aggregations derive from detail but not the reverse; aggregate marts would sit on top.
+- Everything is implemented in pandas per the brief; no dbt or warehouse. The layer split, grain and tests map directly onto dbt models over a warehouse, which is how this would be built in production.
+- Layers would be orchestrated (Airflow for example) with freshness checks on bronze, each source on its own schedule. Bronze append-only, partitioned by `_batch_id`. `fct_sales` stays at sale grain because aggregations derive from detail but not the reverse; aggregate marts would sit on top.
