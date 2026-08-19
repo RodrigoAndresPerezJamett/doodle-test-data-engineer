@@ -55,6 +55,43 @@ Each layer writes Parquet and the next reads from disk, so any layer can be repr
 | silver | `stg_*` |
 | gold | `fct_*` / `dim_*` |
 
+## Model architecture
+```mermaid
+flowchart LR
+    subgraph raw["data/raw"]
+        S1[sales_data.json]
+        S2[customers.json]
+        S3[products.csv]
+    end
+
+    subgraph bronze["bronze - land as text"]
+        B1[sales]
+        B2[customers]
+        B3[products]
+        BQ[(quarantine)]
+    end
+
+    subgraph silver["silver - typed, conformed, deduped"]
+        V1[stg_sales]
+        V2[stg_customers]
+        V3[stg_products]
+    end
+
+    subgraph gold["gold - dimensional model"]
+        D1[dim_products]
+        D2[dim_customers]
+        F[fct_sales]
+    end
+
+    S1 --> B1 --> V1 --> F
+    S2 --> B2 --> V2 --> D2 --> F
+    S3 --> B3 --> V3 --> D1 --> F
+
+    B1 -.-> BQ
+
+    F --> A[analysis.ipynb]
+```
+
 ## How to validate
 
 - `make run` and `make docker-run`  is self-validating: it fails if any data test fails. 
