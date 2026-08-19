@@ -55,7 +55,7 @@ Each layer writes Parquet and the next reads from disk, so any layer can be repr
 | silver | `stg_*` |
 | gold | `fct_*` / `dim_*` |
 
-## Model architecture
+### Model architecture
 ```mermaid
 flowchart LR
     subgraph raw["data/raw"]
