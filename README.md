@@ -1,7 +1,6 @@
 # Toys Inc. - Data Modeling & Quality Assurance
 
-Layered pipeline (bronze -> silver -> gold) that ingests three raw files, isolates data quality
-issues, builds a dimensional model, and answers four business questions.
+Layered pipeline (bronze -> silver -> gold) that ingests three raw files, isolates data quality issues, builds a dimensional model, and answers four business questions.
 
 ## Setup
 
@@ -19,6 +18,16 @@ No 3.14? `make setup PYTHON=python3.12`
 **Full run command**
 ```bash
 make clean && rm -rf .venv && make setup && make run
+```
+
+### Alternative: Docker
+
+If you'd rather not manage a local Python version:
+
+```bash
+make docker-run    # runs the pipeline
+make docker-lab    # runs Jupyter, then open the printed localhost link
+make docker-clean  # removes the image (run it after review to delelte the docker image if you want)
 ```
 
 ## Project structure
@@ -48,9 +57,7 @@ Each layer writes Parquet and the next reads from disk, so any layer can be repr
 
 ## How to validate
 
-`make run` is self-validating: it fails if any data test fails. A successful run prints
-`bronze tests: 6 passed`, `silver tests: 9 passed`, `gold tests: 6 passed`, and produces
-2,983 sales, 400 customers, 200 products.
+`make run` is self-validating: it fails if any data test fails. A successful run prints `bronze tests: 6 passed`, `silver tests: 9 passed`, `gold tests: 6 passed`, and produces 2,983 sales, 400 customers, 200 products.
 
 ## Data quality issues
 
@@ -76,16 +83,13 @@ One record was wrapped twice; the loop handles arbitrary depth up to 5.
 | `CustomerID` = 99989 placeholder | 53 | Set to null in silver |
 | `TotalAmount` negative | 52 | Flagged `amount_is_valid`, excluded from revenue |
 
-The 52 negatives match exactly the 52 rows where `TotalAmount != Quantity × Price`. That is why
-they are treated as corrupt values, not returns. Excluded rather than recalculated, since
-recalculating invents a figure the source never sent.
+The 52 negatives match exactly the 52 rows where `TotalAmount != Quantity × Price`. That is why they are treated as corrupt values, not returns. Excluded rather than recalculated, since recalculating invents a figure the source never sent.
 
 `SaleID` is unique with no nulls, `Quantity` is 1–10, all dates parse as ISO.
 
 ### customers.json
 
-Structurally clean. `Region` null for 88 of 400 (22%), `SignUpDate` for 67. `CustomerID` and
-`Email` unique. Nulls preserved, not imputed.
+Structurally clean. `Region` null for 88 of 400 (22%), `SignUpDate` for 67. `CustomerID` and `Email` unique. Nulls preserved, not imputed.
 
 ### products.csv
 
@@ -95,8 +99,7 @@ Structurally clean. `Region` null for 88 of 400 (22%), `SignUpDate` for 67. `Cus
 | `ProductID` 254 duplicated | 1 | Rows verified identical, first kept |
 | `ProductName` blank or whitespace | 50 | Trimmed to null |
 
-Highest-impact issue in the dataset. Unconformed, it splits one category in two and drops a
-third of the products from the Action Figure average, changing Q4 with nothing failing.
+Highest-impact issue in the dataset. Unconformed, it splits one category in two and drops a third of the products from the Action Figure average, changing Q4 with nothing failing.
 
 ## Assumptions
 
@@ -125,13 +128,9 @@ More details on notebooks/analysis.ipynb
 Caveats a stakeholder should know:
 
 - Q1 rests on 47 transactions with a 3-unit gap between first and second. Not a stable trend.
-- Q2's signup filter drops ~42% of sales. That rate is not plausible as real behaviour and
-  suggests `SignUpDate` is unreliable, likely a migration date. Worth raising upstream.
-- Regional figures exclude 706 of 2,983 sales (24%) with no region. Sales with no product
-  reference are 2.6% of revenue: too small to shift a conclusion, reported anyway.
+- Q2's signup filter drops ~42% of sales. That rate is not plausible as real behaviour and suggests `SignUpDate` is unreliable, likely a migration date. Worth raising upstream.
+- Regional figures exclude 706 of 2,983 sales (24%) with no region. Sales with no product reference are 2.6% of revenue: too small to shift a conclusion, reported anyway.
 
 ## In production
 
-Layers would be orchestrated (Airflow, Dagster) with freshness checks on bronze, each source on
-its own schedule. Bronze append-only, partitioned by `_batch_id`. `fct_sales` stays at sale grain
-because aggregations derive from detail but not the reverse; aggregate marts would sit on top.
+Layers would be orchestrated (Airflow for example) with freshness checks on bronze, each source on its own schedule. Bronze append-only, partitioned by `_batch_id`. `fct_sales` stays at sale grain because aggregations derive from detail but not the reverse; aggregate marts would sit on top.
