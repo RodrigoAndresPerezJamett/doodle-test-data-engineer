@@ -57,7 +57,8 @@ Each layer writes Parquet and the next reads from disk, so any layer can be repr
 
 ## How to validate
 
-`make run` is self-validating: it fails if any data test fails. A successful run prints `bronze tests: 6 passed`, `silver tests: 9 passed`, `gold tests: 6 passed`, and produces 2,983 sales, 400 customers, 200 products.
+- `make run` and `make docker-run`  is self-validating: it fails if any data test fails. 
+- A successful run prints `bronze tests: 6 passed`, `silver tests: 9 passed`, `gold tests: 6 passed`, and produces 2,983 sales, 400 customers, 200 products.
 
 ## Data quality issues
 
@@ -71,8 +72,8 @@ Each layer writes Parquet and the next reads from disk, so any layer can be repr
 | Record wrapped in a random key | 94 | Unwrapped when the sole value is an object |
 | Both combined | 4 | Same loop alternates between cases |
 
-Payloads are intact; only the transport broke. Dropping them would have lost ~6% of sales.
-One record was wrapped twice; the loop handles arbitrary depth up to 5.
+- Payloads are intact; only the transport broke. Dropping them would have lost ~6% of sales.
+- One record was wrapped twice; the loop handles arbitrary depth up to 5.
 
 **Values**
 
